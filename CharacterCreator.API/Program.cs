@@ -1,6 +1,16 @@
+using CharacterCreator.API.Middleware;
 using CharacterCreatorMvc.Infra.IoC;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, services, cfg) => cfg
+    .ReadFrom.Configuration(ctx.Configuration)
+    .ReadFrom.Services(services));
 
 builder.Services.AddInfrastructureAPI(builder.Configuration);
 
@@ -21,6 +31,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseStatusCodePages();
 app.UseAuthentication();
